@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",               // 输出最新 JavaScript 标准
+    "module": "ESNext",               // 使用 ES 模块系统
+    "lib": ["DOM", "DOM.Iterable", "ESNext"], // 包括最新 ECMAScript 和 DOM 特性
+    "strict": true,                   // 开启严格模式
+    "moduleResolution": "node",       // 使用 Node.js 模块解析逻辑
+    "esModuleInterop": true,          // 支持 CommonJS 模块的默认导入
+    "allowSyntheticDefaultImports": true, // 允许对模块使用默认导入
+    "resolveJsonModule": true,        // 支持导入 JSON 文件
+    "skipLibCheck": true,             // 跳过类型库检查以加快编译速度
+    "forceConsistentCasingInFileNames": true, // 强制文件名大小写一致
+    "outDir": "./dist",               // 编译后的输出目录
+    "rootDir": "./src",               // 源文件的根目录
+    "noEmit": false,                  // 是否不生成输出文件（适合开发阶段）
+    "baseUrl": "."                    // 用于解析路径别名
+  },
+  "include": ["src/**/*.ts"], // 包括的文件路径
+  "exclude": ["node_modules", "dist"]        // 排除的文件路径
+}
