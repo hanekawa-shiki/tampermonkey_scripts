@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 监听以 "v" 开头的标签推送
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # 设置 Node.js 版本
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # 指定 Node.js 版本
+          cache: 'pnpm'       # 缓存依赖
+
+      # 安装依赖
+      - name: Install dependencies
+        run: pnpm install
+
+      # 构建项目
+      - name: Build project
+        run: pnpm run build
+
+      # 打包构建结果为 ZIP 文件
+      - name: Create release package
+        run: zip -r release.zip ./dist
+
+      # 上传构建结果到 GitHub Releases
+      - name: Upload to GitHub Releases
+        uses: actions/upload-release-asset@v1
+        with:
+          repo: ${{ github.repository }}
+          release_id: ${{ steps.create_release.outputs.id }}
+          asset_path: ./release.zip
+          asset_name: release.zip
+          asset_content_type: application/zip
+
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    steps:
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            自动化构建的发布版本。
+          draft: false
+          prerelease: false
