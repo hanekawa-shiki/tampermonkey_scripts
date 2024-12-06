@@ -6,6 +6,7 @@
 // @author       hanekawa-shiki
 // @match        *://annas-archive.org/torrents/*
 // @grant        unsafeWindow
+// @license MIT
 // ==/UserScript==
 
 interface TorrentData {
