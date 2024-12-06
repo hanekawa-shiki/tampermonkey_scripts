@@ -38,7 +38,9 @@ jobs:
         run: zip -r release.zip ./dist
 
       - name: Install GitHub CLI
-        uses: actions/setup-gh@v3
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
 
       # 上传构建结果到 GitHub Releases
       - name: Create Release and Upload Assets
