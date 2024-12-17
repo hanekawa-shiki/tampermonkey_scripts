@@ -42,6 +42,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
+      # 获取 commit 信息
+      - name: Get commit messages
+        id: get_commits
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^) # 获取上一个 tag
+          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %h %s (%an)") # 格式化 commit 信息
+          echo "Commit messages:"
+          echo "$COMMITS"
+          echo "::set-output name=commits::$COMMITS"
+
       # 上传构建结果到 GitHub Releases
       - name: Create Release and Upload Assets
         env:
@@ -49,4 +59,4 @@ jobs:
         run: |
           gh release create ${{ github.ref_name }} release.zip \
             --title "Release ${{ github.ref_name }}" \
-            --notes "自动化构建的发布版本"
+            --notes "${{ steps.get_commits.outputs.commits }}"

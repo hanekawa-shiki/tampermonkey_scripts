@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         annas torrents/magnet export
 // @namespace    https://github.com/hanekawa-shiki/tampermonkey_scripts
-// @version      2024-12-17
+// @version      v1.0.9
 // @description  导出annas-archive当前页torrents/magnets
 // @author       hanekawa-shiki
 // @match        *://*.annas-archive.org/torrents/*
@@ -23,6 +23,8 @@ interface DownloadData {
 
 (function () {
   'use strict';
+  const DOMAIN: string = window.location.origin;
+
   const downloadFile = (content: string, fileName: string, mimeType: string = 'text/plain'): void => {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -58,7 +60,7 @@ interface DownloadData {
         if (item2.className === 'p-0 break-all') {
           Array.from(item2.children).forEach((item3: Element) => {
             if (item3.textContent && item3.textContent.includes('torrent')) {
-              obj.torrent = item3.getAttribute('href') ?? '';
+              obj.torrent = DOMAIN + (item3.getAttribute('href') ?? '');
             }
             if (item3.textContent && item3.textContent.includes('magnet')) {
               obj.magnet = item3.getAttribute('href') ?? '';
