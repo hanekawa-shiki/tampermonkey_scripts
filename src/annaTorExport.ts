@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         annas torrents/magnet export
 // @namespace    https://github.com/hanekawa-shiki/tampermonkey_scripts
-// @version      v1.0.9
+// @version      1.0.10
 // @description  导出annas-archive当前页torrents/magnets
 // @author       hanekawa-shiki
 // @match        *://*.annas-archive.org/torrents/*
