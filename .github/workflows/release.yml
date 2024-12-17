@@ -46,8 +46,8 @@ jobs:
       - name: Get commit messages
         id: get_commits
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^) # 获取上一个 tag
-          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %h %s (%an)") # 格式化 commit 信息
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %h %s (%an)")
           echo "Commit messages:"
           echo "$COMMITS"
           echo "::set-output name=commits::$COMMITS"
