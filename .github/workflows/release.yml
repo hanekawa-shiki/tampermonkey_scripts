@@ -3,56 +3,45 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # 监听以 "v" 开头的标签推送
+      - 'v*'
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      # 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
-      # 设置 Node.js 版本
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # 指定 Node.js 版本
-          cache: 'pnpm'       # 缓存依赖
+          node-version: '22'
+          cache: 'pnpm'
 
-      # 安装依赖
       - name: Install dependencies
         run: pnpm install
 
-      # 构建项目
       - name: Build project
         run: pnpm run build
 
-      # 打包构建结果为 ZIP 文件
       - name: Create release package
         run: zip -r release.zip ./dist
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      # 获取 commit 信息
       - name: Get commit messages
         id: get_commits
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
           COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %h %s (%an)")
-          echo "Commit messages:"
-          echo "$COMMITS"
-          echo "::set-output name=commits::$COMMITS"
+          echo "commits<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$COMMITS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
-      # 上传构建结果到 GitHub Releases
       - name: Create Release and Upload Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name         annas torrents/magnet export
 // @namespace    https://github.com/hanekawa-shiki/tampermonkey_scripts
-// @version      1.0.10
+// @version      1.0.11
 // @description  导出annas-archive当前页torrents/magnets
 // @author       hanekawa-shiki
 // @match        *://*.annas-archive.org/torrents/*
+// @match        *://*.annas-archive.gl/torrents/*
+// @match        *://*.annas-archive.pk/torrents/*
+// @match        *://*.annas-archive.gd/torrents/*
 // @grant        unsafeWindow
 // @license MIT
 // ==/UserScript==
@@ -14,16 +17,15 @@ interface TorrentData {
   torrent?: string;
   magnet?: string;
 }
-interface DownloadData {
-  [key: string]: {
-    torrent: string[],
-    magnet: string[]
-  };
-}
+
+type DownloadData = Record<string, {
+  torrent: string[];
+  magnet: string[];
+}>;
 
 (function () {
   'use strict';
-  const DOMAIN: string = window.location.origin;
+  const DOMAIN = window.location.origin;
 
   const downloadFile = (content: string, fileName: string, mimeType: string = 'text/plain'): void => {
     const blob = new Blob([content], { type: mimeType });
@@ -41,29 +43,36 @@ interface DownloadData {
   }
 
   const getData = (): DownloadData => {
-    const target = document.querySelector('.overflow-hidden.max-w-full table tbody')?.children;
-
-    const targetList = target ? Array.from(target) : [];
-
-    const targetListResult = targetList.filter((item: Element) =>
-      item.hasAttribute('class') && item.getAttribute('class') === ''
+    const tbody = document.querySelector(
+      '.overflow-hidden.max-w-full table tbody'
     );
 
-    const resList: TorrentData[] = targetListResult.map((item1: Element) => {
+    if (!tbody) {
+      console.warn('[annaTorExport] 未找到种子表格，请确认当前页面包含种子列表');
+      return {};
+    }
+
+    const rows = Array.from(tbody.children).filter(
+      (item) => item.hasAttribute('class') && item.getAttribute('class') === ''
+    );
+
+    const parsed: TorrentData[] = rows.map((row) => {
       const obj: TorrentData = { date: '', torrent: '', magnet: '' };
 
-      Array.from(item1.children).forEach((item2: Element) => {
-        if (item2.getAttribute('title') === 'Date added') {
-          obj.date = item2.textContent?.trim() ?? '';
+      Array.from(row.children).forEach((cell) => {
+        if (cell.getAttribute('title') === 'Date added') {
+          obj.date = cell.textContent?.trim() ?? '';
         }
 
-        if (item2.className === 'p-0 break-all') {
-          Array.from(item2.children).forEach((item3: Element) => {
-            if (item3.textContent && item3.textContent.includes('torrent')) {
-              obj.torrent = DOMAIN + (item3.getAttribute('href') ?? '');
+        if (cell.className === 'p-0 break-all') {
+          Array.from(cell.children).forEach((link) => {
+            const text = link.textContent ?? '';
+            const href = link.getAttribute('href') ?? '';
+            if (text.includes('torrent')) {
+              obj.torrent = DOMAIN + href;
             }
-            if (item3.textContent && item3.textContent.includes('magnet')) {
-              obj.magnet = item3.getAttribute('href') ?? '';
+            if (text.includes('magnet')) {
+              obj.magnet = href;
             }
           });
         }
@@ -72,49 +81,53 @@ interface DownloadData {
       return obj;
     });
 
-    const resList1 = resList.filter(item => Object.keys(item).length > 1);
+    // 仅保留包含 torrent 或 magnet 链接的条目
+    const valid = parsed.filter(
+      (item) => item.torrent || item.magnet
+    );
 
-    const res: Record<string, { torrent: string[], magnet: string[] }> = {};
+    const res: DownloadData = {};
 
-    resList1.forEach(({ date, torrent, magnet }) => {
-      if (date) {
-        if (!res[date]) {
-          res[date] = { torrent: [], magnet: [] };
-        }
-        if (torrent) {
-          res[date].torrent.push(torrent);
-        }
-        if (magnet) {
-          res[date].magnet.push(magnet);
-        }
+    valid.forEach(({ date, torrent, magnet }) => {
+      if (!date) return;
+      if (!res[date]) {
+        res[date] = { torrent: [], magnet: [] };
       }
+      if (torrent) res[date].torrent.push(torrent);
+      if (magnet) res[date].magnet.push(magnet);
     });
 
-    return res
+    return res;
   }
 
 
   const handleDownload = (obj: DownloadData): void => {
-    let torrentContent = '';
-    let magnetContent = '';
+    const hasData = Object.values(obj).some(
+      (v) => v.torrent.length > 0 || v.magnet.length > 0
+    );
+
+    if (!hasData) {
+      alert('当前页面没有找到可导出的种子或磁力链接');
+      return;
+    }
+
     const time = new Date().getTime();
-    Object.entries(obj).forEach(([key, { torrent, magnet }]) => {
-      torrentContent = `${torrentContent}\r\n\r\n${key}\r\n${torrent.join('\r\n')}`
-      magnetContent = `${magnetContent}\r\n\r\n${key}\r\n${magnet.join('\r\n')}`
-    })
-    downloadFile(torrentContent, `Torrent_${time}.txt`);
-    downloadFile(magnetContent, `Magnet_${time}.txt`);
+    const lines: Record<string, string[]> = { torrent: [], magnet: [] };
 
-  }
+    Object.entries(obj).forEach(([date, { torrent, magnet }]) => {
+      lines.torrent.push(`\r\n\r\n${date}\r\n${torrent.join('\r\n')}`);
+      lines.magnet.push(`\r\n\r\n${date}\r\n${magnet.join('\r\n')}`);
+    });
 
-
+    downloadFile(lines.torrent.join(''), `Torrent_${time}.txt`);
+    downloadFile(lines.magnet.join(''), `Magnet_${time}.txt`);
+  };
 
   function createStyledDownloadButton(): void {
-    // 创建按钮元素
     const button = document.createElement('button');
     button.textContent = '导出种子/磁力链接';
+    button.type = 'button';
 
-    // 设置按钮样式
     Object.assign(button.style, {
       position: 'fixed',
       bottom: '20px',
@@ -127,9 +140,10 @@ interface DownloadData {
       cursor: 'pointer',
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
       fontSize: '14px',
+      zIndex: '9999',
+      transition: 'background-color 0.2s',
     });
 
-    // 鼠标悬停样式
     button.addEventListener('mouseenter', () => {
       button.style.backgroundColor = '#0056b3';
     });
@@ -137,12 +151,10 @@ interface DownloadData {
       button.style.backgroundColor = '#007BFF';
     });
 
-    // 定义下载事件
     button.addEventListener('click', () => {
-      handleDownload(getData())
+      handleDownload(getData());
     });
 
-    // 将按钮添加到页面
     document.body.appendChild(button);
   }
 

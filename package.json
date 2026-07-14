@@ -1,15 +1,30 @@
 {
-  "name": "tampermonkey_scripts",
-  "version": "1.0.10",
-  "description": "",
-  "main": "index.js",
+  "name": "tampermonkey-scripts",
+  "version": "2.0.0",
+  "description": "自用 Tampermonkey 浏览器脚本集合",
+  "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "node scripts/build.mjs",
+    "build:watch": "node scripts/build.mjs --watch",
+    "clean": "rm -rf dist"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "typescript": "5.7.2"
+  "keywords": [
+    "tampermonkey",
+    "userscript",
+    "greasemonkey"
+  ],
+  "author": "hanekawa-shiki",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hanekawa-shiki/tampermonkey_scripts.git"
+  },
+  "homepage": "https://github.com/hanekawa-shiki/tampermonkey_scripts#readme",
+  "bugs": {
+    "url": "https://github.com/hanekawa-shiki/tampermonkey_scripts/issues"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "~6.0.3"
   }
 }

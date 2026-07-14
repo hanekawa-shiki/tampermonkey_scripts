@@ -45,6 +45,9 @@ jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
+# Build output
+dist/
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -89,7 +92,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
