@@ -1,19 +1,24 @@
 # Tampermonkey Scripts
 
-自用 Tampermonkey / Greasemonkey 浏览器脚本集合，使用 TypeScript 编写并通过 esbuild 构建为可直接安装的 `.user.js` 文件。
+自用 Tampermonkey / Greasemonkey 浏览器脚本集合，使用 TypeScript 编写并通过 esbuild 构建为可直接安装的 `.js` 文件。
 
 ## 项目结构
 
 ```
 tampermonkey_scripts/
+├── .github/
+│   └── workflows/
+│       ├── release.yml         # 推送 tag 时自动发布到 GitHub Releases
+│       └── deploy.yml          # 推送 master 时自动部署到 GitHub Pages
 ├── src/                        # TypeScript 源文件
 │   └── annaTorExport.ts        # Anna's Archive 种子/磁力链接导出脚本
 ├── scripts/
 │   └── build.mjs               # 构建脚本（esbuild 打包 + UserScript 头部注入）
-├── dist/                       # 构建输出（.user.js 文件，不提交到 Git）
+├── dist/                       # 构建输出（不提交到 Git）
 ├── package.json
 ├── tsconfig.json
-└── README.md
+├── README.md
+└── HANDOVER.md                 # 项目交接文档
 ```
 
 ## 快速开始
@@ -35,10 +40,10 @@ pnpm install
 pnpm build
 ```
 
-构建产物输出到 `dist/` 目录，文件名根据脚本 `@name` 自动生成（kebab-case），例如：
+构建产物输出到 `dist/` 目录，文件名根据脚本 `@name` 自动生成（kebab-case，转小写），例如：
 
 ```
-dist/annas-torrents/magnet-export.user.js
+dist/annas-archive.js
 ```
 
 ### 监听模式（开发时使用）
@@ -74,7 +79,7 @@ pnpm clean
 ```
 
 3. 编写脚本逻辑
-4. 运行 `pnpm build`，产物将自动输出到 `dist/my-new-script.user.js`
+4. 运行 `pnpm build`，产物将自动输出到 `dist/my-new-script.js`
 
 ## 安装脚本
 
@@ -82,17 +87,26 @@ pnpm clean
 
 1. 构建项目：`pnpm build`
 2. 打开 Tampermonkey 面板 → 实用工具
-3. 在「从文件导入」中选择 `dist/` 目录下的 `.user.js` 文件
+3. 在「从文件导入」中选择 `dist/` 目录下的 `.js` 文件
 
-### 方法二：通过 URL 安装（需托管）
+### 方法二：通过 GitHub Pages 安装
 
-将 `dist/` 中的 `.user.js` 文件托管到服务器，然后在浏览器中打开该文件的 URL，Tampermonkey 会自动检测并提示安装。
+推送 master 分支后，`deploy.yml` 工作流会自动将 `dist/` 部署到 GitHub Pages。部署完成后，可通过以下 URL 直接安装：
+
+```
+https://<username>.github.io/tampermonkey_scripts/annas-archive.js
+```
 
 ## 脚本列表
 
 | 脚本 | 描述 | 匹配站点 |
 |------|------|----------|
-| Anna's Torrent/Magnet Export | 导出 Anna's Archive 当前页所有 torrent 和 magnet 链接 | `*.annas-archive.org/torrents/*` |
+| Anna's Archive | 导出 Anna's Archive 当前页所有 torrent 和 magnet 链接 | `*.annas-archive.org/torrents/*`、`*.annas-archive.gl/torrents/*`、`*.annas-archive.pk/torrents/*`、`*.annas-archive.gd/torrents/*` |
+
+## CI/CD
+
+- **Release**（`release.yml`）：推送 `v*` tag 时自动构建并发布到 GitHub Releases
+- **Deploy**（`deploy.yml`）：推送 master 时自动将构建产物部署到 GitHub Pages
 
 ## 技术栈
 
@@ -108,7 +122,7 @@ pnpm clean
 2. 从每个文件中提取 `==UserScript==` 元数据块
 3. 使用 esbuild 将 TypeScript 编译并打包为 IIFE 格式的 JavaScript
 4. 将 UserScript 元数据头部注入到输出文件顶部
-5. 输出到 `dist/` 目录，文件名取自 `@name` 字段
+5. 输出到 `dist/` 目录，文件名取自 `@name` 字段（kebab-case）
 
 ## License
 
