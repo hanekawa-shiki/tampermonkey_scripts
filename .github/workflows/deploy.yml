@@ -1,0 +1,39 @@
+name: 部署文档
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy-gh-pages:
+    name: Deploy Gh Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Building
+        run: pnpm run build
+
+      - name: Deploy Dist
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: dist
+          clean: true
+          force: true
