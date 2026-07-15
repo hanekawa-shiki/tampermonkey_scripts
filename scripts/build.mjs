@@ -26,7 +26,7 @@ function getOutputFileName(header, filePath) {
     const nameMatch = header.match(/@name\s+(.+)/);
     if (nameMatch) {
       // 将脚本名转为 kebab-case 作为文件名
-      return nameMatch[1].trim().replace(/\s+/g, '-').toLowerCase() + '.user.js';
+      return nameMatch[1].trim().replace(/\s+/g, '-').toLowerCase() + '.js';
     }
   }
   return basename(filePath).replace(/\.ts$/, '.user.js');
